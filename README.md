@@ -32,3 +32,4 @@ claude auth login --claudeai
 ## English
 
 Unofficial Windows x64 build of [vinzdg/codenotch](https://github.com/vinzdg/codenotch), v0.3.0. [Download the installer](https://raw.githubusercontent.com/woocw3/codenotch-windows-build/main/downloads/Codenotch-Windows-v0.3.0-Setup-x64.exe), double-click it, and follow the setup wizard. To display usage, sign in to Codex and Claude Code on the target PC. The original project is MIT-licensed. This installer is unsigned.
+
