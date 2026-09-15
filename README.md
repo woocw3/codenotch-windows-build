@@ -1,4 +1,6 @@
-# Codenotch Windows 설치 안내
+# Codenotch — Codex·Claude 사용량 한눈에 보기 (Windows)
+
+Codenotch는 화면 오른쪽 위젯에서 **Codex와 Claude Code의 사용량을 바로 확인**할 수 있는 Windows 프로그램입니다. 각 서비스에 로그인하면 남은 사용량과 갱신 시점을 한 화면에서 볼 수 있습니다.
 
 이 저장소는 [원본 Codenotch](https://github.com/vinzdg/codenotch)의 Windows 64비트용 비공식 빌드(v0.3.0)를 배포합니다. 원본 커밋은 [`6c28672c300fadcb7fb59a277ba9d3997d74f1d2`](https://github.com/vinzdg/codenotch/commit/6c28672c300fadcb7fb59a277ba9d3997d74f1d2)이며, 원본의 MIT 라이선스는 [LICENSE](LICENSE)에 포함했습니다.
 
@@ -32,4 +34,5 @@ claude auth login --claudeai
 ## English
 
 Unofficial Windows x64 build of [vinzdg/codenotch](https://github.com/vinzdg/codenotch), v0.3.0. [Download the installer](https://raw.githubusercontent.com/woocw3/codenotch-windows-build/main/downloads/Codenotch-Windows-v0.3.0-Setup-x64.exe), double-click it, and follow the setup wizard. To display usage, sign in to Codex and Claude Code on the target PC. The original project is MIT-licensed. This installer is unsigned.
+
 
