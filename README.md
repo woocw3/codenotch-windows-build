@@ -1,4 +1,8 @@
-# Codenotch — Codex·Claude 사용량 한눈에 보기 (Windows)
+# Codenotch — Codex·Claude 사용량 한눈에 보기 / See Codex & Claude usage at a glance (Windows)
+
+[한국어](#한국어-안내) · [English](#english-guide)
+
+## 한국어 안내
 
 Codenotch는 화면 오른쪽 위젯에서 **Codex와 Claude Code의 사용량을 바로 확인**할 수 있는 Windows 프로그램입니다. 각 서비스에 로그인하면 남은 사용량과 갱신 시점을 한 화면에서 볼 수 있습니다.
 
@@ -31,8 +35,33 @@ claude auth login --claudeai
 
 ---
 
-## English
+## English guide
 
-Unofficial Windows x64 build of [vinzdg/codenotch](https://github.com/vinzdg/codenotch), v0.3.0. [Download the installer](https://raw.githubusercontent.com/woocw3/codenotch-windows-build/main/downloads/Codenotch-Windows-v0.3.0-Setup-x64.exe), double-click it, and follow the setup wizard. To display usage, sign in to Codex and Claude Code on the target PC. The original project is MIT-licensed. This installer is unsigned.
+Codenotch is a Windows widget that lets you **check Codex and Claude Code usage at a glance**. After signing in to each service on your PC, you can see usage and reset times together in the widget on the right edge of the screen.
 
+This repository distributes an unofficial Windows x64 build of [vinzdg/codenotch](https://github.com/vinzdg/codenotch), v0.3.0, built from upstream commit [`6c28672c300fadcb7fb59a277ba9d3997d74f1d2`](https://github.com/vinzdg/codenotch/commit/6c28672c300fadcb7fb59a277ba9d3997d74f1d2). The original project is MIT-licensed; see [LICENSE](LICENSE).
 
+### Install on another Windows PC
+
+1. [Download the Setup executable](https://raw.githubusercontent.com/woocw3/codenotch-windows-build/main/downloads/Codenotch-Windows-v0.3.0-Setup-x64.exe). Save `Codenotch-Windows-v0.3.0-Setup-x64.exe`.
+2. Double-click the downloaded file and follow the setup wizard. It creates a Start Menu shortcut and offers an optional desktop shortcut.
+3. Check that the widget appears on the right edge of the screen. To start it again, select **Codenotch** from the Start Menu. If search does not find it, press `Win + R` and enter `%LOCALAPPDATA%\Programs\Codenotch\codenotch.exe`.
+
+The [ZIP archive](https://github.com/woocw3/codenotch-windows-build/releases/download/v0.3.0-windows/Codenotch-Windows-v0.3.0-x64.zip) also contains the Setup executable and portable binaries. For portable use, extract the ZIP and run `codenotch.exe` with `codenotch-hook.exe` in the same folder.
+
+### If usage is missing
+
+Usage is read from sign-ins **on the PC where you install Codenotch**. Sign in to Codex on that PC. To show Claude usage, install Claude Code and sign in with:
+
+```powershell
+claude auth login --claudeai
+```
+
+Restart Codenotch after signing in. If Windows asks for WebView2, install Microsoft Edge WebView2 Runtime.
+
+This installer is unsigned, so Windows may display an unknown publisher warning. The package contains no account credentials or personal settings.
+
+### SHA-256
+
+- Setup EXE: `DBBE6A6B3329A332EF5C037CF88FD8C08B86A071843F7344505F9005259156F3`
+- ZIP: `8E88BEA9EE63E0EA8BE9E77B8B2073EBE5D91C460314840EAD912F8BFBA0B9DC`
