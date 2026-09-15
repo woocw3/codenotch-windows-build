@@ -26,6 +26,22 @@ claude auth login --claudeai
 
 로그인을 마친 뒤 Codenotch를 종료하고 다시 실행하세요. 실행 시 WebView2가 필요하다는 메시지가 나오면 Microsoft Edge WebView2 Runtime을 설치하세요.
 
+## Codex(GPT)는 바로 보이는데 Claude만 늦게 보일 때
+
+두 사용량은 읽는 방법이 다릅니다.
+
+- **Codex**는 PC에 남아 있는 세션 기록(`~/.codex/sessions/...`의 rollout 로그)을 바로 읽을 수 있어, 네트워크 요청이 실패해도 마지막 값이 즉시 나옵니다.
+- **Claude**는 로컬 기록이 없습니다. `%USERPROFILE%\.claude\.credentials.json`의 토큰으로 Anthropic 사용량 API를 호출해야만 값이 생기고, 조회 주기는 1분(사용 중)~5분(유휴)입니다. 그래서 실행 직후에는 비어 있을 수 있습니다.
+
+확인 순서는 다음과 같습니다.
+
+1. **토큰 파일이 있는지 확인**합니다. `%USERPROFILE%\.claude\.credentials.json`이 없으면 Claude 칸은 계속 로그인 필요 상태입니다. 이 파일은 **독립 실행형 Claude Code CLI**만 만듭니다. Claude 데스크톱 앱(또는 앱에 내장된 Claude Code)으로 로그인하면 토큰이 앱 전용 저장소에 들어가 Codenotch가 읽지 못합니다. 터미널에서 `claude auth status`로 로그인 상태를 확인하세요.
+2. **토큰을 갱신**합니다. 토큰은 발급 후 약 8시간이면 만료되고, 만료된 토큰은 CLI를 한 번 실행해야 새로 발급됩니다. 터미널에서 `claude`를 한 번 실행했다가 종료한 뒤, 트레이 아이콘 메뉴에서 **사용량 지금 새로고침**을 누르세요.
+3. **바로 갱신되지 않으면 잠시 기다립니다.** 배포된 v0.3.0 빌드는 만료된 토큰을 그대로 보내고, 서버는 여기에 429와 함께 약 1시간짜리 Retry-After를 돌려줍니다. 그러면 Codenotch는 그 시간만큼 조회를 멈추므로, 2번을 먼저 하고(토큰을 유효하게 만든 뒤) 새로고침하는 것이 가장 빠릅니다. Codenotch를 껐다 켜도 대기 시간은 저장되어 유지됩니다.
+4. **진단 로그를 봅니다.** 명령 프롬프트에서 `%LOCALAPPDATA%\Programs\Codenotch\codenotch.exe doctor`를 실행하면 자격증명 탐지 결과가 출력되고 `%APPDATA%\codenotch\doctor.log`에도 저장됩니다.
+
+만료 토큰을 자동으로 갱신하는 수정(원본 커밋 [`27e4b34`](https://github.com/vinzdg/codenotch/commit/27e4b34))은 이 빌드가 기준으로 삼은 커밋 이후에 원본에 들어갔습니다. 즉 위 2번 과정은 이 빌드에서만 필요한 수동 작업입니다.
+
 이 설치 프로그램은 전자서명이 없어 Windows에서 게시자 경고가 표시될 수 있습니다. 패키지에 계정 인증정보나 개인 설정은 포함하지 않았습니다.
 
 ## 파일 확인용 SHA-256
@@ -58,6 +74,22 @@ claude auth login --claudeai
 ```
 
 Restart Codenotch after signing in. If Windows asks for WebView2, install Microsoft Edge WebView2 Runtime.
+
+### If Codex (GPT) shows up right away but Claude does not
+
+The two readings come from different places.
+
+- **Codex** can read session history left on the PC (the rollout logs under `~/.codex/sessions/...`), so the last known number appears instantly even when a network call fails.
+- **Claude** has no local history. A number exists only after Codenotch calls the Anthropic usage API with the token in `%USERPROFILE%\.claude\.credentials.json`, and it polls every 1 minute while you work, every 5 minutes when idle. So the cell can be empty right after startup.
+
+Work through this:
+
+1. **Check that the token file exists.** Without `%USERPROFILE%\.claude\.credentials.json` the Claude cell stays in the "needs sign-in" state. Only the **standalone Claude Code CLI** writes that file. Signing in through the Claude desktop app (or the Claude Code bundled inside it) stores the token in the app's own store, which Codenotch cannot read. Run `claude auth status` in a terminal to check.
+2. **Refresh the token.** The token expires roughly 8 hours after it is issued, and only a run of the CLI issues a new one. Start `claude` once in a terminal, exit it, then pick **Refresh usage now** from the tray icon menu.
+3. **If it still does not update, wait it out.** The published v0.3.0 build sends an expired token as-is, and the server answers with 429 plus a Retry-After of about an hour, during which Codenotch makes no further calls. Doing step 2 first (so the token is valid) and then refreshing is the fastest path. The wait is persisted, so restarting Codenotch does not clear it.
+4. **Read the diagnostics.** Run `%LOCALAPPDATA%\Programs\Codenotch\codenotch.exe doctor` from a command prompt; it prints what it found for the credential and also writes `%APPDATA%\codenotch\doctor.log`.
+
+The upstream fix that renews an expired token automatically (commit [`27e4b34`](https://github.com/vinzdg/codenotch/commit/27e4b34)) landed after the commit this build was made from, so step 2 is a manual workaround specific to this build.
 
 This installer is unsigned, so Windows may display an unknown publisher warning. The package contains no account credentials or personal settings.
 
