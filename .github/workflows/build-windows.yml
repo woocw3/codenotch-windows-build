@@ -1,0 +1,119 @@
+name: Build Codenotch Windows
+
+# Rebuilds the distributed Windows package from upstream vinzdg/codenotch on a
+# Windows runner, because the installer is an NSIS bundle that only Windows can
+# produce. Run it from the Actions tab; it commits the result into downloads/.
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: Upstream vinzdg/codenotch ref to build (branch, tag or commit)
+        required: true
+        default: main
+      commit_result:
+        description: Commit the built files into downloads/ on this branch
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+        with:
+          path: dist
+
+      - name: Check out upstream codenotch
+        uses: actions/checkout@v4
+        with:
+          repository: vinzdg/codenotch
+          ref: ${{ inputs.upstream_ref }}
+          path: upstream
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: upstream/windows
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2" --locked
+
+      - name: Build the hook helper
+        working-directory: upstream/windows
+        run: cargo build --release --locked -p codenotch-hook
+
+      - name: Build the app and the NSIS installer
+        working-directory: upstream/windows/codenotch
+        run: cargo tauri build
+
+      - name: Collect the package
+        id: collect
+        shell: pwsh
+        run: |
+          $release = "upstream/windows/target/release"
+          $setup = Get-ChildItem "$release/bundle/nsis/*-setup.exe" | Select-Object -First 1
+          if (-not $setup) { throw "no NSIS installer was produced" }
+
+          $version = (Get-Content upstream/windows/codenotch/tauri.conf.json | ConvertFrom-Json).version
+          $sha = (git -C upstream rev-parse HEAD)
+          $short = $sha.Substring(0, 7)
+
+          New-Item -ItemType Directory -Force -Path staging | Out-Null
+          $setupName = "Codenotch-Windows-v$version-Setup-x64.exe"
+          $zipName = "Codenotch-Windows-v$version-x64.zip"
+          Copy-Item $setup.FullName "staging/$setupName"
+          Copy-Item "$release/codenotch.exe" staging/
+          Copy-Item "$release/codenotch-hook.exe" staging/
+
+          # The ZIP carries the installer plus the portable pair, as the guide describes.
+          Compress-Archive -Path "staging/$setupName", staging/codenotch.exe, staging/codenotch-hook.exe -DestinationPath "staging/$zipName"
+
+          Copy-Item "staging/$setupName" "dist/downloads/$setupName" -Force
+          Copy-Item "staging/$zipName" "dist/downloads/$zipName" -Force
+
+          $setupHash = (Get-FileHash "dist/downloads/$setupName" -Algorithm SHA256).Hash
+          $zipHash = (Get-FileHash "dist/downloads/$zipName" -Algorithm SHA256).Hash
+
+          @(
+            "upstream: vinzdg/codenotch@$sha"
+            "requested ref: ${{ inputs.upstream_ref }}"
+            "version: $version"
+            "built: $(Get-Date -Format o)"
+            ""
+            "SHA-256"
+            "$setupHash  $setupName"
+            "$zipHash  $zipName"
+          ) | Set-Content "dist/downloads/BUILD-INFO.txt"
+
+          Get-Content "dist/downloads/BUILD-INFO.txt"
+          "upstream_sha=$sha" >> $env:GITHUB_OUTPUT
+          "short_sha=$short" >> $env:GITHUB_OUTPUT
+
+      - name: Upload the package as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codenotch-windows-${{ steps.collect.outputs.short_sha }}
+          path: staging/*
+
+      - name: Commit the rebuilt package
+        if: ${{ inputs.commit_result }}
+        working-directory: dist
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add downloads
+          if git diff --cached --quiet; then
+            echo "the rebuilt package is identical to the committed one"
+            exit 0
+          fi
+          git commit -m "Rebuild the Windows package from upstream ${{ steps.collect.outputs.short_sha }}"
+          git push origin HEAD:${{ github.ref_name }}
