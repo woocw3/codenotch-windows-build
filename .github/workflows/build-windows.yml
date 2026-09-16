@@ -55,6 +55,19 @@ jobs:
         working-directory: upstream/windows
         run: cargo build --release --locked -p codenotch-hook
 
+      # Upstream bundles only the app binary, but the hook helper has to sit next
+      # to codenotch.exe for the Claude Code session hooks to install, and the
+      # previously distributed installer carried it. Declaring it as a Tauri
+      # resource puts it in the install directory on Windows.
+      - name: Ship the hook helper inside the installer
+        shell: pwsh
+        run: |
+          Copy-Item upstream/windows/target/release/codenotch-hook.exe upstream/windows/codenotch/
+          $conf = "upstream/windows/codenotch/tauri.conf.json"
+          $json = Get-Content $conf -Raw | ConvertFrom-Json
+          $json.bundle | Add-Member -NotePropertyName resources -NotePropertyValue @("codenotch-hook.exe") -Force
+          $json | ConvertTo-Json -Depth 20 | Set-Content $conf
+
       - name: Build the app and the NSIS installer
         working-directory: upstream/windows/codenotch
         run: cargo tauri build
