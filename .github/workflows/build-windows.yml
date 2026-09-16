@@ -2,8 +2,13 @@ name: Build Codenotch Windows
 
 # Rebuilds the distributed Windows package from upstream vinzdg/codenotch on a
 # Windows runner, because the installer is an NSIS bundle that only Windows can
-# produce. Run it from the Actions tab; it commits the result into downloads/.
+# produce. It commits the result into downloads/. Dispatch it from the Actions
+# tab once this file is on the default branch; until then, pushing this file to
+# a build branch is what starts a run.
 on:
+  push:
+    paths:
+      - '.github/workflows/build-windows.yml'
   workflow_dispatch:
     inputs:
       upstream_ref:
@@ -31,7 +36,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: vinzdg/codenotch
-          ref: ${{ inputs.upstream_ref }}
+          ref: ${{ inputs.upstream_ref || 'main' }}
           path: upstream
           fetch-depth: 0
 
@@ -84,7 +89,7 @@ jobs:
 
           @(
             "upstream: vinzdg/codenotch@$sha"
-            "requested ref: ${{ inputs.upstream_ref }}"
+            "requested ref: ${{ inputs.upstream_ref || 'main' }}"
             "version: $version"
             "built: $(Get-Date -Format o)"
             ""
@@ -104,7 +109,7 @@ jobs:
           path: staging/*
 
       - name: Commit the rebuilt package
-        if: ${{ inputs.commit_result }}
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.commit_result }}
         working-directory: dist
         shell: bash
         run: |
